@@ -1,88 +1,86 @@
 Vue.component('diagrams', {
     data() {
         return {
-           items: [
+            items: [
                 {name: 'b1', color: 'red', value: 100},
                 {name: 'b2', color: 'orange', value: 120},
                 {name: 'b3', color: 'yellow', value: 150},
                 {name: 'b4', color: 'green', value: 220},
-                {name: 'b5', color: 'blue', value: 300},
-                {name: 'b6', color: 'darkblue', value: 200},
-                {name: 'b7', color: 'purple', value: 250}
-           ]
+                {name: 'b5', color: 'dodgerblue', value: 300},
+                {name: 'b6', color: 'blue', value: 200},
+                {name: 'b7', color: 'rebeccapurple', value: 250}
+            ]
         }
     },
     methods: {
-        // changeHeight(inputValue) {
-        //     // console.log(inputValue);
-        //     item.value = inputValue;
-        //     console.log(item.value);
-        // }
+        setValue(value){
+            return value;
+        },
     },
-    template: `
-        <div class="diagrams">
-            <block 
-                v-for="item in items" 
-                :name="item.name" 
-                :color="item.color" 
-                :value="item.value">
-            </block>
-        </div>
-    `
-});
-
-Vue.component('block', {
-    props: {
-        name: String,
-        color: String,
-        value: Number
-    },
-    data () {
-        return {
-            css: {
-                obj: {
-                    backgroundColor: this.color,
-                    height: this.value + 'px'
-                }    
-            }
+    mounted() {
+        if(localStorage.getItem('items')) {
+            this.items = JSON.parse(localStorage.getItem('items'));
         }
     },
-    methods: {
-        rangeValue(inputValue){
-            this.value = +inputValue;
-        }
+    updated () {  
+        localStorage.setItem('items', JSON.stringify(this.items) );
     },
-    // created() {
-    //     console.log(this.color, 'color');
-    // },
     template: `
-        <div class="diagram-item"> 
-            <div class="block" v-bind:style="css.obj">{{name}}</div>
-            <range @setValue="rangeValue" v-model="this.value"></range>
+        <div class="diagram">
+            <buttonSort
+                @setItem="sortDiagram"
+                :items="items"> 
+            </buttonSort>
+            <div class="diagramItem" v-for="item in items">
+                <div class="block" 
+                    v-bind:style="{ backgroundColor: item.color, height: item.value + 'px'}">
+                        {{ item.name }}
+                </div>
+                <range
+                    :item="item" 
+                    :value="setValue(item.value)">
+                </range>
+            </div>
         </div>
     `
 });
 
 Vue.component('range', {
     props: {
-        value: Number 
-        // ?
-    },
-    data() {
-        return {
-
-        }
+        item: Object
     },
     methods: {
         onRange(value) {
-            console.log(value);
             this.$emit('setValue', value);
+        },
+    },
+    template: `
+        <input type="range" min="100" max="300"
+            v-model.number="item.value" 
+            @input="onRange(item.value)">
+    `
+});
+
+Vue.component('buttonSort', {
+    props: {
+        items: Array
+    },
+    data () {
+        return {
+            buttonName: "Sort Up"
+        }
+    },
+    methods: {
+        sortDiagram(items) {
+            items.sort(function (a, b) {
+                return a.value - b.value;
+            });
         }
     },
     template: `
-        <input type="range"  min="100" max="300" 
-        v-model="value" 
-        @input="onRange(value)">
+        <button @click="sortDiagram(items)">
+            {{ buttonName }}
+        </button>
     `
 });
 
